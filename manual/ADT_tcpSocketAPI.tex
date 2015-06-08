@@ -1,0 +1,139 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage{graphicx}
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc} %instalar latex-ucs.
+\usepackage[spanish]{babel}
+\usepackage{listings}
+\usepackage[colorlinks=true]{hyperref}
+
+% Title Page
+\title{ADT\_TCPSocket API\\ Interfaz de programación para conexiones TCP/IP en C++}
+\author{Mario Chririnos Colunga\\ Áurea - Desarrollo Tecnológico}
+
+
+\begin{document}
+\maketitle
+
+% \begin{abstract}
+% 
+% \end{abstract}
+
+\tableofcontents
+\section{Introducción}
+En este documento se describe nuestra interfaz de programación de aplicaciones para conexiones TCP/IP utilizando \textbf{\href{http://en.wikipedia.org/wiki/Berkeley\_sockets}{BSD sockets}}. Se utiliza \href{http://library.gnome.org/devel/glib/}{glib} para monitorizar el estado del los puertos. El documento está estructurado de la siguiente manera: en la sección \S\ref{api} describe el funcionamiento de nuestro código, la sección \S\ref{ejemplo} describe detalles relacionados al ejemplo incluido con el código fuente y la sección \S\ref{notas} proporciona notas y comentarios finales sobre este documento. 
+
+\section{ADT\_TCPSocket API}
+\label{api}
+
+\begin{figure}
+
+  \lstset{language=c++}
+  \lstset{commentstyle=\textit}
+  \tiny
+  \begin{lstlisting}[frame=trbl]{}
+#ifndef ADT_TCPSOCKET_H
+#define ADT_TCPSOCKET_H
+
+#include <iostream>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <glib.h>
+#include <arpa/inet.h>
+
+using namespace std;
+//------------------------------------------------------------------------------
+#define	CONNQUEUE	1 // connection backlog queue
+#define	BUFFERSIZE	255
+//------------------------------------------------------------------------------
+class ADT_TCPSocket
+{
+ private:
+ 	int rxid;
+ 	GIOChannel* serverChannel;
+ 	GIOChannel* clientChannel;
+ 
+ 	int serverSocketFd;
+	struct sockaddr_in server_addr;
+	
+ 	int clientSocketFd;
+	struct sockaddr_in client_addr;
+	
+	int sendData(int fd, const unsigned char *data,  int length) const;
+	int sendToServer(const unsigned char* data, unsigned int length) const;
+ 	
+	virtual void onGetData(struct sockaddr_in client);
+	
+	static int listen_callback(GIOChannel *source, GIOCondition condition, void *data);
+	static int tcp_callback(GIOChannel *source, GIOCondition condition, void *data);
+	
+ protected:
+  	unsigned char* buffer;
+  	int bufferLength;
+  	
+ public: 
+ 	int connectToServer(const char *_server, int portno);
+ 	int sendData(const unsigned char* data, unsigned int length) const;
+ 	int sendData(const char* data, unsigned int length) const;
+ 	int sendData(const char *address, int port, const char *data,  int length) const;
+ 	int sendData(const char *address, int port, const unsigned char *data,  int length) const;
+
+ 	ADT_TCPSocket(int port);
+	~ADT_TCPSocket();
+};
+//------------------------------------------------------------------------------
+
+  \end{lstlisting}
+  \caption{ADT\_TCPSocket.h}
+  \label{joystick.h}
+\end{figure}
+  \subsection{Requisitos}
+    Para compilar código de esta API se requiere contar con el paquete \textbf{libglib2.0-dev}, agregar al compilador C++ las banderas obtenidas mediante: \texttt{pkg-config --cflags glib-2.0},   \texttt{pkg-config --libs glib-2.0} y contar con un núcleo de Linux versión 2.4 o superior.
+
+  \subsection{Constructor}
+    El constructor \texttt{ADT\_TCPSocket(int port)} abre un puerto TCP/IP para que un cliente pueda estableser una conexión con el objeto creado.
+	
+  \subsection{Conexión}
+    La función miembro \texttt{int connectToServer(const char *server, int portno)} permite conectarse el puerto $portno$ en el servidor con dirección $server$. La función devuelve cero si la conexión fue exitosa.
+
+  \subsection{Envío de datos}
+    Para enviar datos a través de la conexión TCP/IP están disponibles dos funciones:
+
+  \begin{itemize}
+   \item   \texttt{int sendData(const unsigned char* data, unsigned int length)}\\
+	    La función envía un arreglo de datos $data$ de longitud $length$. Esta función debe ser utilizada cuando exista una conexión entre un un cliente y un servidor; Cuando el programa actúa como cliente la conexión con el servidor es creada por medio de la función \texttt{connectToServer(.)}; Cuando el programa es usado como servidor los datos son enviados a la conexión creada con el cliente.
+
+   \item  \texttt{int sendData(const char *address, int port, const char *data,  int length)}\\
+	  Esta función crea una conexión en el puerto $port$ con el servidor $address$ y envía un arreglo de datos $data$ de longitud $length$. Al terminar de enviar los datos la conexión se cerrada.
+
+
+  \end{itemize}
+
+    %Para desconectar el puerto se utiliza la función \texttt{void disconnect()}.
+
+
+\subsection{Eventos}
+La API utiliza \href{http://library.gnome.org/devel/glib/}{glib} para monitorizar el estado del puerto TCP/IP y llamar a una función de retro llamada (\textit{callback}) cuando se genere un evento. Se debe iniciar un \textit{ g main loop o gtk main loop} en el programa principal para activar los eventos.
+
+La función virtual miembro \texttt{virtual void onGetData(struct sockaddr\_in client)} es llamada cada vez que se reciben datos por el puerto TCP/IP, esta función puede ser sobreescrita por clases derivadas. 
+
+\section{Ejemplo}
+\label{ejemplo}
+  Junto con el código de esta API se provee de un programa ejemplo para demostrar su funcionamiento.
+
+  \subsection{Requisitos}
+  Para compilar el programa ejemplo se requiere contar con el paquete \textbf{libgtk2.0-dev}. Las banderas de compilación se especifican en el archivo \textit{makefile} de este ejemplo.
+
+\section{Notas}
+\label{notas}
+El código fuente de esta API puede ser descargado en \href{http://www.aurea-dt.com/#tcpip}{nuestro sitio web}, en donde también se pueden reportar errores en el código fuente. Para reportar errores en este documento favor de escribir a errata@aurea-dt.com.
+
+
+
+%\bibliographystyle{plain}	% (uses file "plain.bst")
+%\bibliography{/home/mchc/Aurea/CPP/Programs/ADTlib-0.0.1/Manual/ADTlib.bib}
+\end{document}          

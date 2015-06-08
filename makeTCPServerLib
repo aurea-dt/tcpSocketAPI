@@ -1,0 +1,52 @@
+#-------------------------------------------------------------------------------
+#	AUTOR
+#	Aurea Desarrollo Tecnológico.
+#	FECHA
+#	Notas:
+#-------------------------------------------------------------------------------
+APPNAME = GTKapp
+#Compiler:
+	CC=g++
+	MAKELIB=ar rcs
+	OPT= 
+	LIBEXT=.a
+
+#Compiler flags
+	CFLAGS=-c -g -Wall -O3
+	INCLUIDES=$(shell pkg-config --cflags gtk+-2.0 libgnomeui-2.0)
+	LIBS=$(shell pkg-config --libs gtk+-2.0 libgnomeui-2.0)
+#Directories
+	DIRlib= /usr/local/lib	
+	incDIR= /usr/local/include
+	libADT= /home/mchc/aurea/cpp/programs/ADTlib-0.0.1
+#main function
+	mainP= main
+	callbacks = My_callbacks
+	guiClass = My_guiClass
+#-------------------------------------------------------------------------------
+all: Project
+
+Project:guiClass.o callbacks.o TCPServer.o
+	$(MAKELIB) $(APPNAME)$(LIBEXT) \
+	$(LIBS) \
+	-L $(libADT) \
+	$(guiClass).o \
+	$(callbacks).o \
+	TCPServer.o
+	
+guiClass.o: $(guiClass).cpp
+	$(CC) $(INCLUIDES) $(CFLAGS) \
+	-I $(libADT) \
+	$(guiClass).cpp 
+
+callbacks.o: $(callbacks).cpp
+	$(CC) $(INCLUIDES) $(CFLAGS) \
+	-I $(libADT) \
+	$(callbacks).cpp 
+	
+TCPServer.o: TCPServer.cpp
+	$(CC) $(INCLUIDES) $(CFLAGS) \
+	-I $(libADT) \
+	TCPServer.cpp 
+	
+	

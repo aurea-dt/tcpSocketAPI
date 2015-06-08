@@ -1,2 +1,2 @@
 # tcpSocketAPI
-Interfaz de programacion para conexiones TCP/IP en C++
+En este documento se describe nuestra interfaz de programaci ́on de aplicaciones para conexiones TCP/IP utilizando BSD sockets. Se utiliza glib para monitorizar el estado del los puertos. El documento est ́a estructurado de la siguiente manera: en la seccion §2 describe el funcionamiento de nuestro c ́odigo, la seccion §3 describe detalles relacionados al ejemplo incluido con el c ́odigo fuente y la seccion §4 proporciona notas y comentarios finales sobre este documento.
